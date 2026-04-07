@@ -24,6 +24,7 @@ import {
 } from './screens/AllScreens';
 import { ConciergeHomeScreen } from './screens/ConciergeHomeScreen';
 import { PassengerTrackingWeb } from './screens/PassengerTrackingWeb';
+import { RideDeepLinkScreen } from './screens/RideDeepLinkScreen';
 
 // Driver Selection Screens
 import {
@@ -74,6 +75,7 @@ export default function App() {
             
             {/* Passenger Tracking & Membership Flow */}
             <Route path="/track-ride" element={<PassengerTrackingWeb />} />
+            <Route path="/ride" element={<RideDeepLinkScreen />} />
             <Route path="/membership" element={<MembershipScreen />} />
             <Route path="/membership-payment" element={<MembershipPaymentScreen />} />
 

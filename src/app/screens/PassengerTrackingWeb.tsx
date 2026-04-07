@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { GlassCard, GoldButton } from '../components/GlassCard';
 import { 
   MapPin, Clock, Calendar, Car, Navigation, 
@@ -49,7 +49,12 @@ const DEFAULT_ASSIGNED: TrackingDriverDisplay = {
 export const PassengerTrackingWeb = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { user, setActiveRide } = useApp();
+
+  // Read deep link params: pickup pre-filled from concierge link
+  const deepLinkPickup = searchParams.get('pickup') || '';
+  const deepLinkToken = searchParams.get('token') || '';
   
   const [step, setStep] = useState<'config' | 'schedule' | 'payment' | 'tracking'>('config');
   const [dropOffLocation, setDropOffLocation] = useState('');
@@ -106,7 +111,7 @@ export const PassengerTrackingWeb = () => {
 
   // Requirement 4.3 & 6.3: Detect Membership Status
   const isMember = isMemberFlag || user?.isMember === true;
-  const pickupLocation = user?.hotelName || "The Grand Majestic Hotel";
+  const pickupLocation = deepLinkPickup || user?.hotelName || "The Grand Majestic Hotel";
 
   const handleBackNavigation = () => {
     if (step === 'tracking') {
