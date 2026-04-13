@@ -61,7 +61,7 @@ export const ConciergeHomeScreen = () => {
                 icon={<Calendar className="w-5 h-5" />}
               >
                 <div className="text-center">
-                  <p className="text-xl font-bold">Schedule a Ride</p>
+                  <p className="text-xl font-bold">Reserve a Ride</p>
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Schedule Reservation</p>
                 </div>
               </GoldButton>
