@@ -338,6 +338,10 @@ export const PassengerTrackingWeb = () => {
           {/* STEP 4: TRACKING (GATED AMENITIES) */}
           {step === 'tracking' && (
             <motion.div key="tracking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+
+              {/* DUMMY MAP */}
+              <DummyMap pickup={pickupLocation} dropoff={dropOffLocation} driverName={assignedDriver.name} />
+
               <GlassCard className="p-8 text-center border-green-500/20">
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                 
@@ -537,5 +541,133 @@ const AppDownloadPopup = ({ user, onClose }: { user: AppUser | null; onClose: ()
         </GlassCard>
       </motion.div>
     </motion.div>
+  );
+};
+
+// ─── Dummy Map Component ────────────────────────────────────────────────────
+const DummyMap = ({
+  pickup,
+  dropoff,
+  driverName,
+}: {
+  pickup: string;
+  dropoff: string;
+  driverName: string;
+}) => {
+  // Animated car position along a bezier-like path (0 → 1)
+  const [progress, setProgress] = React.useState(0.15);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(p => (p >= 0.88 ? 0.15 : p + 0.004));
+    }, 80);
+    return () => clearInterval(interval);
+  }, []);
+
+  // SVG path points: start (pickup) → curve → end (dropoff)
+  const W = 340;
+  const H = 200;
+  const startX = 48, startY = 160;
+  const endX = 292, endY = 48;
+  const cp1X = 100, cp1Y = 60;
+  const cp2X = 240, cp2Y = 170;
+
+  // Cubic bezier position at t
+  const bezier = (t: number) => {
+    const mt = 1 - t;
+    return {
+      x: mt * mt * mt * startX + 3 * mt * mt * t * cp1X + 3 * mt * t * t * cp2X + t * t * t * endX,
+      y: mt * mt * mt * startY + 3 * mt * mt * t * cp1Y + 3 * mt * t * t * cp2Y + t * t * t * endY,
+    };
+  };
+
+  const carPos = bezier(progress);
+
+  // Road grid lines for the dummy map background
+  const gridLines: React.ReactElement[] = [];
+  for (let x = 0; x <= W; x += 40) gridLines.push(<line key={`v${x}`} x1={x} y1={0} x2={x} y2={H} stroke="#1a1a1a" strokeWidth="1" />);
+  for (let y = 0; y <= H; y += 40) gridLines.push(<line key={`h${y}`} x1={0} y1={y} x2={W} y2={y} stroke="#1a1a1a" strokeWidth="1" />);
+
+  return (
+    <div className="rounded-2xl overflow-hidden border-2 border-[#D4AF37]/20 bg-[#0a0a0a]">
+      {/* Map header */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <Navigation className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
+          <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">Live Tracking</span>
+        </div>
+        <span className="text-[9px] text-gray-600 font-bold uppercase">Simulation</span>
+      </div>
+
+      {/* SVG map */}
+      <div className="relative">
+        <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="block">
+          {/* Grid background */}
+          {gridLines}
+
+          {/* Road blocks (dummy city blocks) */}
+          {[
+            [80, 40, 60, 50], [160, 30, 50, 60], [240, 50, 55, 45],
+            [70, 120, 65, 55], [155, 110, 50, 60], [235, 115, 60, 50],
+          ].map(([x, y, w, h], i) => (
+            <rect key={i} x={x} y={y} width={w} height={h} rx="4" fill="#111" stroke="#1f1f1f" strokeWidth="1" />
+          ))}
+
+          {/* Route path — dashed trail */}
+          <path
+            d={`M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`}
+            fill="none"
+            stroke="#D4AF37"
+            strokeWidth="2"
+            strokeDasharray="6 4"
+            opacity="0.3"
+          />
+
+          {/* Travelled portion — solid gold */}
+          <path
+            d={`M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`}
+            fill="none"
+            stroke="#D4AF37"
+            strokeWidth="2.5"
+            strokeDasharray={`${progress * 420} 999`}
+          />
+
+          {/* Pickup pin */}
+          <circle cx={startX} cy={startY} r="7" fill="#22c55e" opacity="0.9" />
+          <circle cx={startX} cy={startY} r="3" fill="#fff" />
+
+          {/* Dropoff pin */}
+          <circle cx={endX} cy={endY} r="7" fill="#ef4444" opacity="0.9" />
+          <circle cx={endX} cy={endY} r="3" fill="#fff" />
+
+          {/* Animated car dot */}
+          <circle cx={carPos.x} cy={carPos.y} r="10" fill="#D4AF37" opacity="0.15" />
+          <circle cx={carPos.x} cy={carPos.y} r="6" fill="#D4AF37" />
+          <circle cx={carPos.x} cy={carPos.y} r="3" fill="#000" />
+        </svg>
+
+        {/* Pin labels */}
+        <div className="absolute bottom-2 left-3 flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full bg-green-500" />
+          <span className="text-[9px] text-gray-400 font-bold max-w-[80px] truncate">{pickup || 'Pickup'}</span>
+        </div>
+        <div className="absolute top-2 right-3 flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full bg-red-500" />
+          <span className="text-[9px] text-gray-400 font-bold max-w-[80px] truncate">{dropoff || 'Dropoff'}</span>
+        </div>
+      </div>
+
+      {/* Map footer */}
+      <div className="flex items-center justify-between px-4 py-2 border-t border-white/5">
+        <div className="flex items-center gap-2">
+          <Car className="w-3.5 h-3.5 text-[#D4AF37]" />
+          <span className="text-[9px] text-gray-400 font-bold">{driverName} en route</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+          <span className="text-[9px] text-[#D4AF37] font-black uppercase">Live</span>
+        </div>
+      </div>
+    </div>
   );
 };
